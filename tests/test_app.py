@@ -4,35 +4,62 @@ import main
 
 
 def test_health(client):
-    r = client.get("/health")
-    assert r.status_code == 200
-    assert r.get_json()["status"] == "healthy"
+    res = client.get("/health")
+    assert res.status_code == 200
+    assert res.get_json()["status"] == "healthy"
 
 
 def test_api(client):
-    r = client.get("/api")
-    assert r.status_code == 200
-    assert r.get_json()["service"] == "mon-tp-cloud"
+    res = client.get("/api")
+    assert res.status_code == 200
+    assert res.get_json()["status"] == "ok"
 
 
-def test_upload_requires_file(client):
-    assert client.post("/upload").status_code == 400
+def test_list_todos_empty(client):
+    res = client.get("/todos")
+    assert res.status_code == 200
+    assert res.get_json() == []
 
 
-def test_upload_rejects_empty_filename(client):
-    data = {"file": (io.BytesIO(b"x"), "")}
-    r = client.post("/upload", data=data, content_type="multipart/form-data")
-    assert r.status_code == 400
+def test_create_todo_no_title(client):
+    res = client.post("/todos", data={})
+    assert res.status_code == 400
 
 
-def test_upload_persists_and_lists(client, monkeypatch):
-    # Don't hit real S3 — the upload path is what we're testing, not boto3.
+def test_create_todo_minimal(client):
+    res = client.post("/todos", data={"title": "Buy milk"})
+    assert res.status_code == 201
+    data = res.get_json()
+    assert data["title"] == "Buy milk"
+    assert data["status"] == "pending"
+    assert data["file_url"] is None
+
+
+def test_create_todo_appears_in_list(client):
+    client.post("/todos", data={"title": "Task A"})
+    res = client.get("/todos")
+    assert len(res.get_json()) == 1
+
+
+def test_update_status(client):
+    r = client.post("/todos", data={"title": "Task"})
+    todo_id = r.get_json()["id"]
+    res = client.patch(f"/todos/{todo_id}", json={"status": "done"})
+    assert res.status_code == 200
+    assert res.get_json()["status"] == "done"
+
+
+def test_delete_todo(client):
+    r = client.post("/todos", data={"title": "To delete"})
+    todo_id = r.get_json()["id"]
+    res = client.delete(f"/todos/{todo_id}")
+    assert res.status_code == 204
+    assert client.get("/todos").get_json() == []
+
+
+def test_create_todo_with_file(client, monkeypatch):
     monkeypatch.setattr(main.s3_client, "upload_fileobj", lambda *a, **k: None)
-
-    data = {"file": (io.BytesIO(b"hello"), "note.txt")}
-    r = client.post("/upload", data=data, content_type="multipart/form-data")
-    assert r.status_code == 200, r.get_json()
-    assert r.get_json()["filename"] == "note.txt"
-
-    rows = client.get("/uploads").get_json()
-    assert any(row["filename"] == "note.txt" for row in rows)
+    data = {"title": "With attachment", "file": (io.BytesIO(b"hello"), "doc.txt")}
+    res = client.post("/todos", data=data, content_type="multipart/form-data")
+    assert res.status_code == 201
+    assert res.get_json()["file_url"] is not None
