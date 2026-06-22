@@ -1,0 +1,17 @@
+# Keep secrets, infra, and dev cruft out of image layers.
+.git
+.gitignore
+.env
+*.env
+.venv
+__pycache__
+*.pyc
+.ruff_cache
+.pytest_cache
+tests
+terraform
+k8s
+.github
+*.tfstate*
+*.md
+.gcloudignore

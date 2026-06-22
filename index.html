@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Call Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 720px;
+            margin: 40px auto;
+            padding: 0 16px;
+            line-height: 1.5;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        button, input[type="file"] {
+            border: 1px solid #1f2937;
+            background: #111827;
+            color: #ffffff;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        input[type="file"] {
+            background: #374151;
+            cursor: pointer;
+        }
+
+        pre {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 12px;
+            min-height: 120px;
+            overflow: auto;
+        }
+
+        .upload-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .history-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 8px 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+        }
+
+        td a {
+            color: #2563eb;
+            word-break: break-all;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Test API Cloud Run</h1>
+    <p>Cette page appelle ton backend deploye sur Cloud Run.</p>
+
+    <div class="actions">
+        <button id="call-root" type="button">Appeler /</button>
+        <button id="call-health" type="button">Appeler /health</button>
+    </div>
+
+    <pre id="result">Pret a appeler l API...</pre>
+
+    <div class="upload-section">
+        <h2>Upload vers S3</h2>
+        <form id="upload-form">
+            <input type="file" name="file" id="file-input" required>
+            <button type="submit">Upload</button>
+        </form>
+        <pre id="upload-result">Pret pour l'upload...</pre>
+    </div>
+
+    <div class="history-section">
+        <h2>Historique des uploads (PostgreSQL)</h2>
+        <button id="refresh-history" type="button">Rafraichir</button>
+        <div id="history-container" style="margin-top:12px">Chargement...</div>
+    </div>
+
+    <script>
+        const API_BASE_URL = "";
+        const resultElement = document.getElementById("result");
+
+        async function callApi(path) {
+            resultElement.textContent = "Chargement...";
+
+            try {
+                const response = await fetch(`${API_BASE_URL}${path}`, {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json"
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                resultElement.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultElement.textContent = `Erreur d'appel API: ${error.message}`;
+            }
+        }
+
+        document.getElementById("call-root").addEventListener("click", () => callApi("/api"));
+        document.getElementById("call-health").addEventListener("click", () => callApi("/health"));
+
+        callApi("/api");
+
+        async function loadHistory() {
+            const container = document.getElementById("history-container");
+            try {
+                const res = await fetch(`${API_BASE_URL}/uploads`);
+                const data = await res.json();
+                if (!data.length) {
+                    container.innerHTML = "<p>Aucun upload enregistre.</p>";
+                    return;
+                }
+                container.innerHTML = `<table>
+                    <thead><tr><th>#</th><th>Fichier</th><th>URL S3</th><th>Date</th></tr></thead>
+                    <tbody>${data.map(r => `<tr>
+                        <td>${r.id}</td>
+                        <td>${r.filename}</td>
+                        <td><a href="${r.s3_url}" target="_blank">${r.s3_url}</a></td>
+                        <td>${new Date(r.uploaded_at).toLocaleString()}</td>
+                    </tr>`).join("")}</tbody>
+                </table>`;
+            } catch (e) {
+                container.innerHTML = `<p>Erreur: ${e.message}</p>`;
+            }
+        }
+
+        loadHistory();
+        document.getElementById("refresh-history").addEventListener("click", loadHistory);
+
+        // Upload S3
+        const uploadForm = document.getElementById("upload-form");
+        const uploadResult = document.getElementById("upload-result");
+        const fileInput = document.getElementById("file-input");
+
+        uploadForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const file = fileInput.files[0];
+            if (!file) {
+                uploadResult.textContent = "Veuillez selectionner un fichier";
+                return;
+            }
+
+            uploadResult.textContent = "Upload en cours...";
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/upload`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                uploadResult.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                uploadResult.textContent = `Erreur d'upload: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+
+</html>
