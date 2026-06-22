@@ -5,6 +5,10 @@ terraform {
       version = "~> 6.0"
     }
   }
+  backend "gcs" {
+    bucket = "mon-tp-cloud-tfstate"
+    prefix = "terraform/prod"
+  }
 }
 
 provider "google" {
