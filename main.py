@@ -27,7 +27,7 @@ s3_client = boto3.client(
 # Database configuration
 DATABASE_URL = os.environ.get(
     "DATABASE_URL",
-    "postgresql://postgres:postgres@localhost:30432/uploads",
+    "sqlite:////tmp/uploads.db",
 )
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
