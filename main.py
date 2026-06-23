@@ -77,6 +77,7 @@ def health():
 def readiness():
     try:
         db.session.execute(text("SELECT 1"))
+        db.create_all()  # idempotent — creates missing tables if startup failed
         return jsonify({"status": "ready", "db": "ok"}), 200
     except Exception as e:
         return jsonify({"status": "not ready", "db": str(e)}), 503
