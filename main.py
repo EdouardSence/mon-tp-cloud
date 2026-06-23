@@ -23,7 +23,7 @@ s3_client = boto3.client(
     aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
 )
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:////tmp/todos.db")
+DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://bad-host:5432/nonexistent")
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
