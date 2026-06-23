@@ -143,11 +143,11 @@ resource "kubernetes_service" "app" {
     port {
       port        = 80
       target_port = 8080
-      node_port   = 30080
+      node_port   = 30083
     }
   }
 }
 
 output "url" {
-  value = "http://$(minikube ip):30080"
+  value = "http://$(minikube ip):30083"
 }
