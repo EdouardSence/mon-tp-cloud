@@ -9,6 +9,12 @@ def test_health(client):
     assert res.get_json()["status"] == "healthy"
 
 
+def test_readiness_ok(client):
+    res = client.get("/healthz/ready")
+    assert res.status_code == 200
+    assert res.get_json()["db"] == "ok"
+
+
 def test_api(client):
     res = client.get("/api")
     assert res.status_code == 200

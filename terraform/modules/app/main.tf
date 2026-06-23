@@ -65,9 +65,10 @@ resource "google_cloud_run_v2_service" "app" {
         initial_delay_seconds = 5
         period_seconds        = 10
       }
+      # DB must respond before traffic is routed to this revision.
       startup_probe {
         http_get {
-          path = "/health"
+          path = "/healthz/ready"
         }
         failure_threshold     = 5
         period_seconds        = 10

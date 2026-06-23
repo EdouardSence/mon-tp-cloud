@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 
 load_dotenv()
 
@@ -70,6 +71,15 @@ def api():
 @app.get("/health")
 def health():
     return jsonify({"status": "healthy"}), 200
+
+
+@app.get("/healthz/ready")
+def readiness():
+    try:
+        db.session.execute(text("SELECT 1"))
+        return jsonify({"status": "ready", "db": "ok"}), 200
+    except Exception as e:
+        return jsonify({"status": "not ready", "db": str(e)}), 503
 
 
 @app.get("/todos")
