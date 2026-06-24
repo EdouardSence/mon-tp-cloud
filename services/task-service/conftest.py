@@ -6,9 +6,8 @@ os.environ.setdefault("AWS_ACCESS_KEY_ID", "test")
 os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "test")
 os.environ.setdefault("S3_BUCKET", "test-bucket")
 
-import pytest  # noqa: E402
-
 import main  # noqa: E402
+import pytest  # noqa: E402
 
 
 @pytest.fixture

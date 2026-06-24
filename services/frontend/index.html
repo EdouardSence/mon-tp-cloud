@@ -193,12 +193,31 @@
   </div>
 </div>
 
+<script src="/config.js"></script>
 <script>
-  const API = "";
+  // Backend URLs injected at container start (envsubst -> config.js). Empty = same origin.
+  const cfg = window.APP_CONFIG || {};
+  const TASK = cfg.TASK_API || "";
+  const AUTH = cfg.AUTH_API || "";
+
+  // Mock auth: log in once on load, keep the token for mutating requests.
+  let token = null;
+  async function login() {
+    if (!AUTH) return;
+    try {
+      const r = await fetch(`${AUTH}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: "demo" }),
+      });
+      token = (await r.json()).token;
+    } catch { /* task-service allows writes when auth is not wired */ }
+  }
+  const authHeaders = () => (token ? { Authorization: `Bearer ${token}` } : {});
 
   async function fetchEnv() {
     try {
-      const r = await fetch(`${API}/api`);
+      const r = await fetch(`${TASK}/api`);
       const d = await r.json();
       document.getElementById("env-label").textContent = d.message || d.service;
     } catch { document.getElementById("env-label").textContent = ""; }
@@ -207,7 +226,7 @@
   async function loadTodos() {
     const list = document.getElementById("todos-list");
     try {
-      const r = await fetch(`${API}/todos`);
+      const r = await fetch(`${TASK}/todos`);
       const todos = await r.json();
       document.getElementById("todo-count").textContent = `${todos.length} tâche${todos.length !== 1 ? "s" : ""}`;
       if (!todos.length) {
@@ -239,16 +258,16 @@
 
   async function toggleStatus(id, current) {
     const next = current === "done" ? "pending" : "done";
-    await fetch(`${API}/todos/${id}`, {
+    await fetch(`${TASK}/todos/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ status: next }),
     });
     loadTodos();
   }
 
   async function deleteTodo(id) {
-    await fetch(`${API}/todos/${id}`, { method: "DELETE" });
+    await fetch(`${TASK}/todos/${id}`, { method: "DELETE", headers: authHeaders() });
     loadTodos();
   }
 
@@ -268,7 +287,7 @@
     if (file) fd.append("file", file);
 
     try {
-      const r = await fetch(`${API}/todos`, { method: "POST", body: fd });
+      const r = await fetch(`${TASK}/todos`, { method: "POST", body: fd, headers: authHeaders() });
       if (!r.ok) {
         const d = await r.json();
         errEl.textContent = d.error || `Erreur ${r.status}`;
@@ -288,8 +307,11 @@
     return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
 
-  fetchEnv();
-  loadTodos();
+  (async () => {
+    await login();
+    fetchEnv();
+    loadTodos();
+  })();
 </script>
 </body>
 </html>

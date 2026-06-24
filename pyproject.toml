@@ -4,7 +4,4 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-pythonpath = ["."]  # repo root on sys.path so tests can `import main` under bare `pytest`
+# pytest is configured per-service (services/*/pytest.ini); each service is its own app.

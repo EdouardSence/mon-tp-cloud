@@ -1,0 +1,4 @@
+window.APP_CONFIG = {
+  TASK_API: "${TASK_API_URL}",
+  AUTH_API: "${AUTH_API_URL}"
+};
