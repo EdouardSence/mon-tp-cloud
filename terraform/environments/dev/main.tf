@@ -44,6 +44,9 @@ module "env" {
   task_image            = var.task_image
   aws_access_key_id     = var.aws_access_key_id
   aws_secret_access_key = var.aws_secret_access_key
+
+  # Dev stays on the ephemeral in-container DB — no Cloud SQL cost.
+  enable_cloud_sql = false
 }
 
 output "frontend_url" {

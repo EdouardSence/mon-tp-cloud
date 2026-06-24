@@ -61,7 +61,7 @@ terraform -chdir=terraform/environments/prod init && terraform -chdir=.../prod a
 
 The CD pipeline overrides `TF_VAR_{frontend,auth,task}_image` with the SHA tag.
 
-**Database**: `database_url` defaults to in-container sqlite (ephemeral, per-instance — fine for the TP). Point it at Cloud SQL for real shared Postgres.
+**Database**: `terraform/modules/database/` provisions a Cloud SQL Postgres instance, gated by `enable_cloud_sql` (default **false** in both envs → no cost). When false, backends use the in-container sqlite fallback. When true, the module is wired automatically: instance attached to Cloud Run via the `/cloudsql` socket and `DATABASE_URL` injected. Set `TF_VAR_db_password` + flip the flag to provision.
 
 > **Legacy** (not in the active path): `k8s/` manifests and `terraform/environments/minikube/` from the earlier single-image Kubernetes exercise are kept for reference.
 

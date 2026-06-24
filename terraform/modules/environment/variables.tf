@@ -26,9 +26,22 @@ variable "task_image" {
 }
 
 variable "database_url" {
-  description = "Postgres URL shared by both backends. Point at Cloud SQL for real prod."
+  description = "Fallback DB URL when Cloud SQL is disabled (ephemeral per-instance)."
   type        = string
-  default     = "sqlite:////tmp/app.db" # ponytail: ephemeral per-instance; swap for Cloud SQL
+  default     = "sqlite:////tmp/app.db"
+}
+
+variable "enable_cloud_sql" {
+  description = "Provision a Cloud SQL Postgres instance and wire it to the backends."
+  type        = bool
+  default     = false
+}
+
+variable "db_password" {
+  description = "Cloud SQL app user password (only used when enable_cloud_sql = true)."
+  type        = string
+  sensitive   = true
+  default     = ""
 }
 
 variable "s3_bucket" {

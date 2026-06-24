@@ -29,6 +29,14 @@ resource "google_cloud_run_v2_service" "this" {
         container_port = var.port
       }
 
+      dynamic "volume_mounts" {
+        for_each = var.cloudsql_instance != "" ? [1] : []
+        content {
+          name       = "cloudsql"
+          mount_path = "/cloudsql"
+        }
+      }
+
       dynamic "env" {
         for_each = var.env
         content {
@@ -77,6 +85,16 @@ resource "google_cloud_run_v2_service" "this" {
         failure_threshold     = 5
         period_seconds        = 10
         initial_delay_seconds = 0
+      }
+    }
+
+    dynamic "volumes" {
+      for_each = var.cloudsql_instance != "" ? [1] : []
+      content {
+        name = "cloudsql"
+        cloud_sql_instance {
+          instances = [var.cloudsql_instance]
+        }
       }
     }
   }

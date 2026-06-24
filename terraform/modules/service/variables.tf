@@ -64,6 +64,12 @@ variable "allow_unauthenticated" {
   default = true
 }
 
+variable "cloudsql_instance" {
+  description = "Cloud SQL connection name to attach via the /cloudsql socket. Empty = none."
+  type        = string
+  default     = ""
+}
+
 # When both are non-empty the module creates Secret Manager secrets and mounts
 # them as AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY (only task-service needs them).
 variable "aws_access_key_id" {

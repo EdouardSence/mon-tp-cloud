@@ -38,6 +38,11 @@ variable "aws_secret_access_key" {
   type      = string
   sensitive = true
 }
+variable "db_password" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
 
 module "env" {
   source = "../../modules/environment"
@@ -48,6 +53,12 @@ module "env" {
   task_image            = var.task_image
   aws_access_key_id     = var.aws_access_key_id
   aws_secret_access_key = var.aws_secret_access_key
+
+  # Cloud SQL Postgres is fully coded and prod-ready. Disabled here to avoid
+  # billing the personal free tier during the demo — flip to true and set
+  # TF_VAR_db_password to provision the real instance + wire it to the backends.
+  enable_cloud_sql = false
+  db_password      = var.db_password
 }
 
 output "frontend_url" {
