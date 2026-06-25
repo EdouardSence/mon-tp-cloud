@@ -78,8 +78,9 @@ module "frontend" {
   min_instances = local.front_min
   max_instances = local.front_max
   memory        = "128Mi"
-  cpu_idle      = local.cpu_idle
-  probe_path    = "/health" # nginx static endpoint; no DB dependency
+  cpu_idle      = true # static nginx: no always-on CPU needed (min=1 already kills cold start).
+  # Cloud Run forbids <512Mi with always-allocated CPU, so the frontend stays idle-throttled.
+  probe_path = "/health" # nginx static endpoint; no DB dependency
   env = {
     TASK_API_URL = module.task.url
     AUTH_API_URL = module.auth.url
