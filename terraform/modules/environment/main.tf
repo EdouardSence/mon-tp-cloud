@@ -5,13 +5,14 @@ locals {
   is_prod = var.environment == "prod"
   suffix  = local.is_prod ? "" : "-${var.environment}"
 
-  # Scaling policy: prod keeps a warm instance + scales wider; dev scales to zero.
-  backend_min = local.is_prod ? 1 : 0
+  # Scaling policy. min=0 everywhere = scale-to-zero = 0€ at rest (cost-free demo).
+  # Real prod would set backend_min/front_min = 1 to kill cold start; flip here.
+  backend_min = 0
   backend_max = local.is_prod ? 10 : 3
-  front_min   = local.is_prod ? 1 : 0
+  front_min   = 0
   front_max   = local.is_prod ? 5 : 2
   memory      = local.is_prod ? "512Mi" : "256Mi"
-  cpu_idle    = local.is_prod ? false : true # always-on CPU in prod for zero-downtime
+  cpu_idle    = local.is_prod ? false : true # always-on CPU per-request in prod
 
   # Cloud SQL when enabled, else the in-container fallback.
   database_url      = var.enable_cloud_sql ? module.database.database_url : var.database_url
