@@ -10,6 +10,10 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 
+# Agent / assistant guidance (local only)
+AGENTS.md
+CLAUDE.md
+
 # Terraform
 **/.terraform/
 *.tfstate
